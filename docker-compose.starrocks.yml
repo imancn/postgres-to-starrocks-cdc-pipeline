@@ -1,40 +1,43 @@
 version: '3.8'
+
 services:
   starrocks-fe:
     image: starrocks/fe-ubuntu:3.2-latest
     container_name: starrocks-fe
-    hostname: starrocks-fe
     ports:
-      - "8030:8030"
-      - "9030:9030"
+      - "8030:8030"   # HTTP port
+      - "9010:9010"   # RPC port
+      - "9020:9020"   # Query port
+    environment:
+      - FE_ROOT_DIR=/opt/starrocks/fe
+    volumes:
+      - ./starrocks/fe/meta:/opt/starrocks/fe/meta
+      - ./starrocks/fe/log:/opt/starrocks/fe/log
+    command: >
+      bash -c "/opt/starrocks/fe/bin/start_fe.sh --daemon;
+               tail -f /opt/starrocks/fe/log/fe.out"
     networks:
       - cdc-network
-    healthcheck:
-      test: ["CMD", "mysql", "-u", "root", "-h", "127.0.0.1", "-P9030", "-e", "SHOW FRONTENDS;"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   starrocks-be:
     image: starrocks/be-ubuntu:3.2-latest
     container_name: starrocks-be
-    hostname: starrocks-be
-    depends_on:
-      starrocks-fe:
-        condition: service_healthy
+    ports:
+      - "8040:8040"
+    environment:
+      - BE_ROOT_DIR=/opt/starrocks/be
+    volumes:
+      - ./starrocks/be/storage:/opt/starrocks/be/storage
+      - ./starrocks/be/log:/opt/starrocks/be/log
     command: >
-      bash -c "ulimit -n 65535;
-               sleep 15;
-               mysql --connect-timeout 2 -h starrocks-fe -P9030 -u root                  -e \"ALTER SYSTEM ADD BACKEND 'starrocks-be:9050';\";
-               bash /opt/starrocks/be/bin/start_be.sh"
+      bash -c "/opt/starrocks/be/bin/start_be.sh --daemon;
+               tail -f /opt/starrocks/be/log/be.out"
+    depends_on:
+      - starrocks-fe
     networks:
       - cdc-network
-    healthcheck:
-      test: ["CMD", "mysql", "-u", "root", "-h", "starrocks-fe", "-P9030", "-e", "SHOW BACKENDS;"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
 networks:
   cdc-network:
     external: true
+

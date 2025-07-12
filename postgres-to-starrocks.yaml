@@ -1,25 +1,5 @@
-source:
-  type: postgres
-  name: Postgres Source
-  hostname: postgres-db
-  port: 5432
-  username: postgres
-  password: postgres
-  database: app_db
-  schema: public
-  tables: ".*"
-  plugin.name: pgoutput
-  slot.name: flink_cdc_slot
-
-sink:
-  type: starrocks
-  name: StarRocks Sink
-  jdbc-url: jdbc:mysql://starrocks-fe:9030
-  load-url: starrocks-fe:8030
-  username: root
-  password: ""
-  table.create.properties.replication_num: 1
-
-pipeline:
-  name: "Postgres to StarRocks Pipeline"
-  parallelism: 2
+flink-cdc-job:
+  source:
+    type: postgres
+  sink:
+    type: starrocks

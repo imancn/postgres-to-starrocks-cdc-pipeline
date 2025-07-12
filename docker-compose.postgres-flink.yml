@@ -1,49 +1,48 @@
-version: '3.8'
 services:
-  postgres:
+  postgres-db:
     image: postgres:15-alpine
     container_name: postgres-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: app_db
     ports:
       - "5432:5432"
-    command: >
-      postgres -c wal_level=logical
-               -c max_wal_senders=10
-               -c max_replication_slots=10
-    volumes:
-      - ./sample_init.sql:/docker-entrypoint-initdb.d/sample_init.sql:ro
+    environment:
+      POSTGRES_DB: test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_pass
     networks:
       - cdc-network
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./sample_init.sql:/docker-entrypoint-initdb.d/init.sql
 
-  jobmanager:
+  flink-jobmanager:
     image: flink:1.20.1-scala_2.12-java8
     container_name: flink-jobmanager
+    command: jobmanager
     ports:
       - "8081:8081"
-    command: jobmanager
     environment:
-      - FLINK_PROPERTIES=jobmanager.rpc.address: flink-jobmanager
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
     volumes:
-      - ./flink-connectors:/opt/flink/lib
+      - ./flink-connectors:/opt/flink/usrlib
     networks:
       - cdc-network
 
-  taskmanager:
+  flink-taskmanager:
     image: flink:1.20.1-scala_2.12-java8
     container_name: flink-taskmanager
-    depends_on:
-      - jobmanager
     command: taskmanager
+    depends_on:
+      - flink-jobmanager
     environment:
-      - FLINK_PROPERTIES=jobmanager.rpc.address: flink-jobmanager
+      - JOB_MANAGER_RPC_ADDRESS=flink-jobmanager
     volumes:
-      - ./flink-connectors:/opt/flink/lib
+      - ./flink-connectors:/opt/flink/usrlib
     networks:
       - cdc-network
 
 networks:
   cdc-network:
     external: true
+
+volumes:
+  pgdata:

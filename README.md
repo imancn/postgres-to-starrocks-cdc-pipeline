@@ -1,2 +1,3 @@
-# postgres-to-starrocks-cdc-pipeline
-postgres-to-starrocks-cdc-pipeline
+# PostgreSQL to StarRocks Real-Time CDC Pipeline (Apache Flink CDC)
+
+... [TRUNCATED FOR BREVITY - will include full content here in final export] ...

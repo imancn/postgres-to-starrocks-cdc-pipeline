@@ -1,0 +1,16 @@
+CREATE DATABASE IF NOT EXISTS test_db;
+
+USE test_db;
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT,
+  name STRING,
+  email STRING,
+  created_at DATETIME
+) ENGINE=OLAP
+DUPLICATE KEY(id)
+DISTRIBUTED BY HASH(id) BUCKETS 4
+PROPERTIES (
+  "replication_num" = "1"
+);
+

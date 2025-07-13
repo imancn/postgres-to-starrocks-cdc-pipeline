@@ -1,5 +1,23 @@
-flink-cdc-job:
-  source:
-    type: postgres
-  sink:
-    type: starrocks
+job:
+  name: postgres_to_starrocks_sync
+  run_interval: 30s   # every 30 seconds
+
+source:
+  type: postgresql
+  host: postgres-db
+  port: 5432
+  username: postgres
+  password: your_password
+  database: test_db
+  schema: public
+  table: users
+
+sink:
+  type: starrocks
+  host: starrocks-fe
+  port: 9030
+  username: root
+  password: ""
+  database: test_db
+  table: users
+

@@ -5,9 +5,10 @@ services:
     image: starrocks/fe-ubuntu:3.2-latest
     container_name: starrocks-fe
     ports:
-      - "8030:8030"   # HTTP port
-      - "9010:9010"   # RPC port
-      - "9020:9020"   # Query port
+      - "8030:8030"   # FE Web UI
+      - "9010:9010"   # FE RPC
+      - "9020:9020"   # FE Query
+      - "9030:9030"   # MySQL Port
     environment:
       - FE_ROOT_DIR=/opt/starrocks/fe
     volumes:
@@ -18,10 +19,16 @@ services:
                tail -f /opt/starrocks/fe/log/fe.out"
     networks:
       - cdc-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8030"]
+      interval: 10s
+      retries: 5
 
   starrocks-be:
     image: starrocks/be-ubuntu:3.2-latest
     container_name: starrocks-be
+    depends_on:
+      - starrocks-fe
     ports:
       - "8040:8040"
     environment:
@@ -32,8 +39,6 @@ services:
     command: >
       bash -c "/opt/starrocks/be/bin/start_be.sh --daemon;
                tail -f /opt/starrocks/be/log/be.out"
-    depends_on:
-      - starrocks-fe
     networks:
       - cdc-network
 
